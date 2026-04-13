@@ -53,6 +53,14 @@ class SolarmanApi {
             timeout: 30000,
             headers: { 'Content-Type': 'application/json' },
         });
+        // Interceptor: inject token as query parameter on every request
+        this.client.interceptors.request.use((config) => {
+            if (this.token && !config.url?.includes('/oauth-s/')) {
+                config.params = config.params || {};
+                config.params.token = this.token;
+            }
+            return config;
+        });
     }
     hashPassword(pwd) {
         return crypto.createHash('sha256').update(pwd).digest('hex');
@@ -62,7 +70,6 @@ class SolarmanApi {
         if (this.preToken) {
             this.token = this.preToken;
             this.tokenExpiry = Date.now() + 86400000 * 30; // 30 days
-            this.client.defaults.headers.common['Authorization'] = 'Bearer ' + this.token;
             this.log.info('[Solarman] Using pre-configured token');
             return;
         }
@@ -81,7 +88,6 @@ class SolarmanApi {
             });
             this.token = res.data.access_token;
             this.tokenExpiry = Date.now() + (res.data.expires_in || 86400) * 1000;
-            this.client.defaults.headers.common['Authorization'] = 'Bearer ' + this.token;
             this.log.info('[Solarman] Authenticated successfully');
         }
         catch (e) {
@@ -99,7 +105,7 @@ class SolarmanApi {
         if (this.plantId)
             return this.plantId;
         await this.ensureAuth();
-        const res = await this.client.post('/maintain-s/operating/station/search?page=1&size=10', {});
+        const res = await this.client.post('/maintain-s/operating/station/search', { page: 1, size: 10 });
         const plants = res.data?.data;
         if (!plants || plants.length === 0) {
             throw new Error('No plants found in SOLARMAN account');
@@ -111,18 +117,52 @@ class SolarmanApi {
     async getData() {
         await this.ensureAuth();
         const plantId = await this.getPlantId();
-        const res = await this.client.post('/maintain-s/operating/station/search?page=1&size=10', {});
-        const plant = res.data?.data?.[0];
-        if (!plant) {
-            throw new Error('Plant not found: ' + plantId);
+        try {
+            const res = await this.client.post('/maintain-s/operating/station/search', { page: 1, size: 10 });
+            const plant = res.data?.data?.[0];
+            if (!plant) {
+                throw new Error('Plant not found: ' + plantId);
+            }
+            return {
+                generationPower: plant.generationPower || 0,
+                usePower: plant.usePower || 0,
+                batterySoc: plant.batterySoc || 0,
+                buyPower: plant.buyPower || 0,
+                gridPower: plant.gridPower || 0,
+                batteryPower: plant.batteryPower || 0,
+                chargePower: plant.chargePower || 0,
+                dischargePower: plant.dischargePower || 0,
+                purchasePower: plant.purchasePower || 0,
+                irradiateIntensity: plant.irradiateIntensity || 0,
+            };
         }
-        return {
-            generationPower: plant.generationPower || 0,
-            usePower: plant.usePower || 0,
-            batterySoc: plant.batterySoc || 0,
-            buyPower: plant.buyPower || 0,
-            gridPower: plant.gridPower || 0,
-        };
+        catch (e) {
+            // If 401, force re-login and retry once
+            if (axios_1.default.isAxiosError(e) && e.response?.status === 401) {
+                this.log.warn('[Solarman] Token expired, re-authenticating...');
+                this.token = '';
+                this.tokenExpiry = 0;
+                await this.login();
+                const res = await this.client.post('/maintain-s/operating/station/search', { page: 1, size: 10 });
+                const plant = res.data?.data?.[0];
+                if (!plant) {
+                    throw new Error('Plant not found after re-auth: ' + plantId);
+                }
+                return {
+                    generationPower: plant.generationPower || 0,
+                    usePower: plant.usePower || 0,
+                    batterySoc: plant.batterySoc || 0,
+                    buyPower: plant.buyPower || 0,
+                    gridPower: plant.gridPower || 0,
+                    batteryPower: plant.batteryPower || 0,
+                    chargePower: plant.chargePower || 0,
+                    dischargePower: plant.dischargePower || 0,
+                    purchasePower: plant.purchasePower || 0,
+                    irradiateIntensity: plant.irradiateIntensity || 0,
+                };
+            }
+            throw e;
+        }
     }
 }
 exports.SolarmanApi = SolarmanApi;

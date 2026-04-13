@@ -6,6 +6,11 @@ const SENSOR_CONFIG = {
     consumption: { name: 'Consumo Casa', unit: 'kW' },
     battery: { name: 'Batería', unit: '%' },
     surplus: { name: 'Excedente', unit: 'kW' },
+    batteryPower: { name: 'Potencia Batería', unit: 'kW' },
+    chargePower: { name: 'Carga Batería', unit: 'kW' },
+    dischargePower: { name: 'Descarga Batería', unit: 'kW' },
+    purchasePower: { name: 'Compra Red', unit: 'kW' },
+    irradiance: { name: 'Irradiancia Solar', unit: 'W/m²' },
 };
 class SolarSensor {
     constructor(platform, accessory, sensorType) {
@@ -56,15 +61,19 @@ class SolarSensor {
         this.service.updateCharacteristic(C.CurrentHeatingCoolingState, 0);
         this.service.updateCharacteristic(C.TargetHeatingCoolingState, 0);
     }
-    updateValue(watts) {
+    updateValue(value) {
         let display;
         if (this.sensorType === 'battery') {
             // Battery SOC is already in %
-            display = Math.round(watts);
+            display = Math.round(value);
+        }
+        else if (this.sensorType === 'irradiance') {
+            // Irradiance is in W/m², show as integer
+            display = Math.max(0, Math.round(value));
         }
         else {
-            // Convert W to kW, ensure non-negative for HomeKit compatibility
-            display = Math.max(0, Math.round((watts / 1000) * 100) / 100);
+            // Value is already in kW from poll(), just round for display
+            display = Math.max(0, Math.round(value * 10) / 10);
         }
         this.currentValue = display;
         const C = this.platform.Characteristic;

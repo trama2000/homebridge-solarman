@@ -4,7 +4,7 @@ exports.SolarmanPlatform = void 0;
 const settings_1 = require("./settings");
 const solarmanApi_1 = require("./solarmanApi");
 const solarSensor_1 = require("./solarSensor");
-const SENSOR_TYPES = ['generation', 'consumption', 'battery', 'surplus'];
+const SENSOR_TYPES = ['generation', 'consumption', 'battery', 'surplus', 'batteryPower', 'chargePower', 'dischargePower', 'purchasePower', 'irradiance'];
 class SolarmanPlatform {
     constructor(log, config, api) {
         this.log = log;
@@ -78,9 +78,24 @@ class SolarmanPlatform {
                     case 'surplus':
                         s.updateValue(surplusKW);
                         break;
+                    case 'batteryPower':
+                        s.updateValue(data.batteryPower / 1000);
+                        break;
+                    case 'chargePower':
+                        s.updateValue(data.chargePower / 1000);
+                        break;
+                    case 'dischargePower':
+                        s.updateValue(data.dischargePower / 1000);
+                        break;
+                    case 'purchasePower':
+                        s.updateValue(data.purchasePower / 1000);
+                        break;
+                    case 'irradiance':
+                        s.updateValue(data.irradiateIntensity);
+                        break;
                 }
             }
-            this.log.info('[Solarman] Poll: gen=' + genKW.toFixed(1) + 'kW use=' + useKW.toFixed(1) + 'kW bat=' + data.batterySoc + '% surplus=' + surplusKW.toFixed(1) + 'kW');
+            this.log.info(`[Solarman] Poll: gen=${genKW}kW use=${useKW}kW bat=${data.batterySoc}% surplus=${surplusKW}kW batPwr=${(data.batteryPower / 1000).toFixed(1)}kW charge=${(data.chargePower / 1000).toFixed(1)}kW discharge=${(data.dischargePower / 1000).toFixed(1)}kW buy=${(data.purchasePower / 1000).toFixed(1)}kW irrad=${data.irradiateIntensity}W/m²`);
         }
         catch (e) {
             this.log.error('Polling failed:', String(e));

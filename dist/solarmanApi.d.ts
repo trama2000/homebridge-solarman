@@ -5,6 +5,11 @@ export interface SolarData {
     batterySoc: number;
     buyPower: number;
     gridPower: number;
+    batteryPower: number;
+    chargePower: number;
+    dischargePower: number;
+    purchasePower: number;
+    irradiateIntensity: number;
 }
 export declare class SolarmanApi {
     private readonly email;

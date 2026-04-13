@@ -1,0 +1,13 @@
+const fs = require('fs');
+const filePath = 'src/solarmanApi.ts';
+let c = fs.readFileSync(filePath, 'utf8');
+if (c.charCodeAt(0) === 0xFEFF) c = c.substring(1);
+const oldLine = "import * as crypto from 'crypto';";
+const newLine = oldLine + "\n" + "import " + "{ Logger }" + " from 'homebridge';";
+c = c.replace(oldLine, newLine);
+fs.writeFileSync(filePath, c, 'utf8');
+const lines = c.split("\n");
+console.log(lines[0]);
+console.log(lines[1]);
+console.log(lines[2]);
+console.log(lines[3]);
