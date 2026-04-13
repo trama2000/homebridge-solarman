@@ -54,9 +54,9 @@ export class SolarmanApi {
     return crypto.createHash('sha256').update(pwd).digest('hex');
   }
 
-  async login(): Promise<void> {
+  async login(forceOAuth = false): Promise<void> {
     // If a pre-configured token is provided, use it directly (skip OAuth)
-    if (this.preToken) {
+    if (this.preToken && !forceOAuth) {
       this.token = this.preToken;
       this.tokenExpiry = Date.now() + 86400000 * 30; // 30 days
       this.log.info('[Solarman] Using pre-configured token');
@@ -87,7 +87,7 @@ export class SolarmanApi {
 
   private async ensureAuth(): Promise<void> {
     if (!this.token || Date.now() > this.tokenExpiry - 60000) {
-      await this.login();
+      await this.login(true);
     }
   }
 
@@ -133,7 +133,7 @@ export class SolarmanApi {
     } catch (e: unknown) {
       // If 401, force re-login and retry once
       if (axios.isAxiosError(e) && e.response?.status === 401) {
-        this.log.warn('[Solarman] Token expired, re-authenticating...');
+        this.log.warn('[Solarman] Token expired, re-authenticating with OAuth...');
         this.token = '';
         this.tokenExpiry = 0;
         await this.login();

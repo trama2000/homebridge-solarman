@@ -65,9 +65,9 @@ class SolarmanApi {
     hashPassword(pwd) {
         return crypto.createHash('sha256').update(pwd).digest('hex');
     }
-    async login() {
+    async login(forceOAuth = false) {
         // If a pre-configured token is provided, use it directly (skip OAuth)
-        if (this.preToken) {
+        if (this.preToken && !forceOAuth) {
             this.token = this.preToken;
             this.tokenExpiry = Date.now() + 86400000 * 30; // 30 days
             this.log.info('[Solarman] Using pre-configured token');
@@ -98,7 +98,7 @@ class SolarmanApi {
     }
     async ensureAuth() {
         if (!this.token || Date.now() > this.tokenExpiry - 60000) {
-            await this.login();
+            await this.login(true);
         }
     }
     async getPlantId() {
@@ -139,7 +139,7 @@ class SolarmanApi {
         catch (e) {
             // If 401, force re-login and retry once
             if (axios_1.default.isAxiosError(e) && e.response?.status === 401) {
-                this.log.warn('[Solarman] Token expired, re-authenticating...');
+                this.log.warn('[Solarman] Token expired, re-authenticating with OAuth...');
                 this.token = '';
                 this.tokenExpiry = 0;
                 await this.login();

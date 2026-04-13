@@ -22,7 +22,7 @@ export declare class SolarmanApi {
     private preToken;
     constructor(email: string, password: string, plantId: number | undefined, log: Logger, preToken?: string);
     private hashPassword;
-    login(): Promise<void>;
+    login(forceOAuth?: boolean): Promise<void>;
     private ensureAuth;
     private getPlantId;
     getData(): Promise<SolarData>;
