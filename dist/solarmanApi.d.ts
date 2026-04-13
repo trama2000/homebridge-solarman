@@ -26,4 +26,5 @@ export declare class SolarmanApi {
     private ensureAuth;
     private getPlantId;
     getData(): Promise<SolarData>;
+    private _getDataInner;
 }

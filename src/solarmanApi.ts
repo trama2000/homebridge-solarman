@@ -107,57 +107,40 @@ export class SolarmanApi {
   }
 
   async getData(): Promise<SolarData> {
-    await this.ensureAuth();
-    const plantId = await this.getPlantId();
-
-    try {
-      const res = await this.client.post(
-        '/maintain-s/operating/station/search', { page: 1, size: 10 },
-      );
-      const plant = res.data?.data?.[0];
-      if (!plant) {
-        throw new Error('Plant not found: ' + plantId);
-      }
-      return {
-        generationPower: plant.generationPower || 0,
-        usePower: plant.usePower || 0,
-        batterySoc: plant.batterySoc || 0,
-        buyPower: plant.buyPower || 0,
-        gridPower: plant.gridPower || 0,
-        batteryPower: plant.batteryPower || 0,
-        chargePower: plant.chargePower || 0,
-        dischargePower: plant.dischargePower || 0,
-        purchasePower: plant.purchasePower || 0,
-        irradiateIntensity: plant.irradiateIntensity || 0,
-      };
-    } catch (e: unknown) {
-      // If 401, force re-login and retry once
+    return this._getDataInner().catch(async (e: unknown) => {
       if (axios.isAxiosError(e) && e.response?.status === 401) {
-        this.log.warn('[Solarman] Token expired, re-authenticating with OAuth...');
+        this.log.warn('[Solarman] Token expired (401), re-authenticating with OAuth...');
         this.token = '';
         this.tokenExpiry = 0;
-        await this.login();
-        const res = await this.client.post(
-          '/maintain-s/operating/station/search', { page: 1, size: 10 },
-        );
-        const plant = res.data?.data?.[0];
-        if (!plant) {
-          throw new Error('Plant not found after re-auth: ' + plantId);
-        }
-        return {
-          generationPower: plant.generationPower || 0,
-          usePower: plant.usePower || 0,
-          batterySoc: plant.batterySoc || 0,
-          buyPower: plant.buyPower || 0,
-          gridPower: plant.gridPower || 0,
-          batteryPower: plant.batteryPower || 0,
-          chargePower: plant.chargePower || 0,
-          dischargePower: plant.dischargePower || 0,
-          purchasePower: plant.purchasePower || 0,
-          irradiateIntensity: plant.irradiateIntensity || 0,
-        };
+        this.plantId = undefined;
+        await this.login(true);
+        return this._getDataInner();
       }
       throw e;
+    });
+  }
+
+  private async _getDataInner(): Promise<SolarData> {
+    await this.ensureAuth();
+    const plantId = await this.getPlantId();
+    const res = await this.client.post(
+      '/maintain-s/operating/station/search', { page: 1, size: 10 },
+    );
+    const plant = res.data?.data?.[0];
+    if (!plant) {
+      throw new Error('Plant not found: ' + plantId);
     }
+    return {
+      generationPower: plant.generationPower || 0,
+      usePower: plant.usePower || 0,
+      batterySoc: plant.batterySoc || 0,
+      buyPower: plant.buyPower || 0,
+      gridPower: plant.gridPower || 0,
+      batteryPower: plant.batteryPower || 0,
+      chargePower: plant.chargePower || 0,
+      dischargePower: plant.dischargePower || 0,
+      purchasePower: plant.purchasePower || 0,
+      irradiateIntensity: plant.irradiateIntensity || 0,
+    };
   }
 }
