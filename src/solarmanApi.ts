@@ -45,6 +45,8 @@ export class SolarmanApi {
       if (this.token && !config.url?.includes('/oauth-s/')) {
         config.params = config.params || {};
         config.params.token = this.token;
+        config.headers = config.headers || {};
+        config.headers['Authorization'] = 'Bearer ' + this.token;
       }
       return config;
     });
@@ -77,7 +79,7 @@ export class SolarmanApi {
       });
       this.token = res.data.access_token;
       this.tokenExpiry = Date.now() + (res.data.expires_in || 86400) * 1000;
-      this.log.info('[Solarman] Authenticated successfully');
+      this.log.info('[Solarman] Authenticated successfully, token length:', this.token?.length, 'expires in:', Math.round((this.tokenExpiry - Date.now()) / 1000), 's');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       this.log.error('[Solarman] Login failed -', msg);
@@ -87,7 +89,7 @@ export class SolarmanApi {
 
   private async ensureAuth(): Promise<void> {
     if (!this.token || Date.now() > this.tokenExpiry - 60000) {
-      await this.login(true);
+      await this.login();
     }
   }
 
@@ -121,6 +123,7 @@ export class SolarmanApi {
   }
 
   private async _getDataInner(): Promise<SolarData> {
+    this.log.info("[Solarman] _getDataInner using token length:", this.token?.length, "plantId:", this.plantId);
     await this.ensureAuth();
     const plantId = await this.getPlantId();
     const res = await this.client.post(
