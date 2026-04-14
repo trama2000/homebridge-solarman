@@ -1,6 +1,6 @@
 {
   "name": "homebridge-solarman",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Homebridge plugin for SOLARMAN solar inverter monitoring in Apple HomeKit",
   "license": "Apache-2.0",
   "author": "trama2000",

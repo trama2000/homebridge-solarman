@@ -2,13 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SolarSensor = void 0;
 const SENSOR_CONFIG = {
-    generation: { name: 'Generación Solar', unit: 'kW' },
+    generation: { name: 'Generacion Solar', unit: 'kW' },
     consumption: { name: 'Consumo Casa', unit: 'kW' },
-    battery: { name: 'Batería', unit: '%' },
+    battery: { name: 'Bateria', unit: '%' },
     surplus: { name: 'Excedente', unit: 'kW' },
-    batteryPower: { name: 'Potencia Batería', unit: 'kW' },
-    chargePower: { name: 'Carga Batería', unit: 'kW' },
-    dischargePower: { name: 'Descarga Batería', unit: 'kW' },
+    batteryPower: { name: 'Potencia Bateria', unit: 'kW' },
+    chargePower: { name: 'Carga Bateria', unit: 'kW' },
+    dischargePower: { name: 'Descarga Bateria', unit: 'kW' },
     purchasePower: { name: 'Compra Red', unit: 'kW' },
     gridExport: { name: 'Exportacion Red', unit: 'kW' },
 };
@@ -20,6 +20,9 @@ class SolarSensor {
         this.currentValue = 0;
         const config = SENSOR_CONFIG[sensorType];
         const C = this.platform.Characteristic;
+
+        // Fix cached accessory displayName to match current config
+        this.accessory.displayName = config.name;
         // Info service
         this.accessory.getService(this.platform.Service.AccessoryInformation)
             .setCharacteristic(C.Manufacturer, 'SOLARMAN')
