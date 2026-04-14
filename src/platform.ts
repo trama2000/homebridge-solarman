@@ -94,7 +94,7 @@ export class SolarmanPlatform implements DynamicPlatformPlugin {
       const data = await this.solarApi.getData();
       const genKW = data.generationPower / 1000;
       const useKW = data.usePower / 1000;
-      const surplusKW = Math.max(0, genKW - useKW);
+      const surplusKW = parseFloat(Math.max(0, genKW - useKW).toFixed(2));
       for (const s of this.sensors) {
         switch (s.sensorType) {
           case 'generation': s.updateValue(genKW); break;
