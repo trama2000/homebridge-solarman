@@ -130,6 +130,8 @@ export class SolarmanApi {
       '/maintain-s/operating/station/search', { page: 1, size: 10 },
     );
     const plant = res.data?.data?.[0];
+    this.log.info('[Solarman] Raw API fields:', JSON.stringify(Object.keys(plant)));
+    this.log.info('[Solarman] Raw values:', JSON.stringify(plant, null, 0));
     if (!plant) {
       throw new Error('Plant not found: ' + plantId);
     }
