@@ -5,7 +5,7 @@ import {
 } from 'homebridge';
 import { SolarmanPlatform } from './platform';
 
-export type SensorType = 'generation' | 'consumption' | 'battery' | 'surplus' | 'batteryPower' | 'chargePower' | 'dischargePower' | 'purchasePower' | 'irradiance';
+export type SensorType = 'generation' | 'consumption' | 'battery' | 'surplus' | 'batteryPower' | 'chargePower' | 'dischargePower' | 'purchasePower' | 'gridExport';
 
 const SENSOR_CONFIG: Record<SensorType, { name: string; unit: string }> = {
   generation: { name: 'Generación Solar', unit: 'kW' },
@@ -16,7 +16,7 @@ const SENSOR_CONFIG: Record<SensorType, { name: string; unit: string }> = {
   chargePower: { name: 'Carga Batería', unit: 'kW' },
   dischargePower: { name: 'Descarga Batería', unit: 'kW' },
   purchasePower: { name: 'Compra Red', unit: 'kW' },
-  irradiance: { name: 'Irradiancia Solar', unit: 'W/m²' },
+  gridExport: { name: 'Exportacion Red', unit: 'kW' },
 };
 
 export class SolarSensor {
@@ -84,7 +84,7 @@ export class SolarSensor {
     if (this.sensorType === 'battery') {
       // Battery SOC is already in %
       display = Math.round(value);
-    } else if (this.sensorType === 'irradiance') {
+    } else if (this.sensorType === 'gridExport') {
       // Irradiance is in W/m², show as integer
       display = Math.max(0, Math.round(value));
     } else {

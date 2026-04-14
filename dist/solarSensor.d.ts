@@ -1,6 +1,6 @@
 import { PlatformAccessory } from 'homebridge';
 import { SolarmanPlatform } from './platform';
-export type SensorType = 'generation' | 'consumption' | 'battery' | 'surplus' | 'batteryPower' | 'chargePower' | 'dischargePower' | 'purchasePower' | 'irradiance';
+export type SensorType = 'generation' | 'consumption' | 'battery' | 'surplus' | 'batteryPower' | 'chargePower' | 'dischargePower' | 'purchasePower' | 'gridExport';
 export declare class SolarSensor {
     private readonly platform;
     private readonly accessory;

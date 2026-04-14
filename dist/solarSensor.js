@@ -10,7 +10,7 @@ const SENSOR_CONFIG = {
     chargePower: { name: 'Carga Batería', unit: 'kW' },
     dischargePower: { name: 'Descarga Batería', unit: 'kW' },
     purchasePower: { name: 'Compra Red', unit: 'kW' },
-    irradiance: { name: 'Irradiancia Solar', unit: 'W/m²' },
+    gridExport: { name: 'Exportacion Red', unit: 'kW' },
 };
 class SolarSensor {
     constructor(platform, accessory, sensorType) {
@@ -67,7 +67,7 @@ class SolarSensor {
             // Battery SOC is already in %
             display = Math.round(value);
         }
-        else if (this.sensorType === 'irradiance') {
+        else if (this.sensorType === 'gridExport') {
             // Irradiance is in W/m², show as integer
             display = Math.max(0, Math.round(value));
         }

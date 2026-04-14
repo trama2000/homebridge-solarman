@@ -4,7 +4,7 @@ exports.SolarmanPlatform = void 0;
 const settings_1 = require("./settings");
 const solarmanApi_1 = require("./solarmanApi");
 const solarSensor_1 = require("./solarSensor");
-const SENSOR_TYPES = ['generation', 'consumption', 'battery', 'surplus', 'batteryPower', 'chargePower', 'dischargePower', 'purchasePower', 'irradiance'];
+const SENSOR_TYPES = ['generation', 'consumption', 'battery', 'surplus', 'batteryPower', 'chargePower', 'dischargePower', 'purchasePower', 'gridExport'];
 class SolarmanPlatform {
     constructor(log, config, api) {
         this.log = log;
@@ -53,6 +53,13 @@ class SolarmanPlatform {
         if (newAccessories.length > 0) {
             this.api.registerPlatformAccessories(settings_1.PLUGIN_NAME, settings_1.PLATFORM_NAME, newAccessories);
         }
+        // Remove obsolete cached accessories (e.g. old 'irradiance' sensor)
+        const validSubtypes = new Set(SENSOR_TYPES.map(t => 'Solar ' + t));
+        const orphans = this.cachedAccessories.filter(a => !validSubtypes.has(a.context?.subtype || ''));
+        if (orphans.length > 0) {
+            this.log.info('Removing ' + orphans.length + ' obsolete cached accessories');
+            this.api.unregisterPlatformAccessories(settings_1.PLUGIN_NAME, settings_1.PLATFORM_NAME, orphans);
+        }
         this.log.info('Total solar sensors: ' + this.sensors.length);
         // Start polling
         this.poll();
@@ -90,12 +97,12 @@ class SolarmanPlatform {
                     case 'purchasePower':
                         s.updateValue(data.purchasePower / 1000);
                         break;
-                    case 'irradiance':
-                        s.updateValue(data.irradiateIntensity);
+                    case 'gridExport':
+                        s.updateValue(Math.max(0, data.gridPower) / 1000);
                         break;
                 }
             }
-            this.log.info(`[Solarman] Poll: gen=${genKW}kW use=${useKW}kW bat=${data.batterySoc}% surplus=${surplusKW}kW batPwr=${(data.batteryPower / 1000).toFixed(1)}kW charge=${(data.chargePower / 1000).toFixed(1)}kW discharge=${(data.dischargePower / 1000).toFixed(1)}kW buy=${(data.purchasePower / 1000).toFixed(1)}kW irrad=${data.irradiateIntensity}W/m²`);
+            this.log.info(`[Solarman] Poll: gen=${genKW}kW use=${useKW}kW bat=${data.batterySoc}% surplus=${surplusKW}kW batPwr=${(data.batteryPower / 1000).toFixed(1)}kW charge=${(data.chargePower / 1000).toFixed(1)}kW discharge=${(data.dischargePower / 1000).toFixed(1)}kW grid=${(data.gridPower / 1000).toFixed(2)}kW buy=${(data.purchasePower / 1000).toFixed(1)}kW${data.irradiateIntensity ? ' irrad=' + data.irradiateIntensity + 'W/m2' : ''}`);
         }
         catch (e) {
             this.log.error('Polling failed:', String(e));
